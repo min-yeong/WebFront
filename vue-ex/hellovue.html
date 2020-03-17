@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 도움되는 콘솔 경고를 포함한 개발 버전 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <!--{{ }} : 콧수염 문법, 외부데이터를 연결시킬 영역(템플릿)-->
+    <div id="app">
+        {{ message }}
+    </div>
+    <script>
+        // Vue 인스턴스 생성
+        var app = new Vue({
+            el:"#app", // 이 Vue 객체를 연결할 요소의 id부여
+            data: {
+                message : "Hello, Vue.js"
+            }, // Model 연관 프로퍼티
+            // :ifeCycle Hook -> 객체 생명 주기에 발생하는 이벤트들, 해당 단계에서 실행할 Callback 함수
+            beforeCreate: function() {
+                // 아직 객체가 생성되지 않은 상태
+                console.log("LifeCycle : beforeCreate");
+                console.log("data : ", this.message);
+                // data가 아직 생성되지 않은 단계, DOM 관련 객체들도 연결되지 않은 상태
+            },
+            created: function() {
+                console.log("LifeCycle : created");
+                console.log("data : ", this.message); // 사용할 수 있는 단계
+                console.log("View 요소 : ", this.$el); // 아직 mount 되지 않음
+                
+                // 어플리케이션 초기 데이터를 서버로부터 받아오는데 적합한 단계
+                this.message = "Model can change"; // 데이터 변경 가능
+            },
+            mounted: function() {
+                // 실제 DOM에 가상 돔을 만들고 리스너를 등록
+                console.log("LifeCycle : mounted");
+                console.log("View 요소 : ", this.$el); 
+                // DOM 관련 작업 수행 가능
+                console.log("DOM 요소에 접근 : ", this.$el.innerText);
+            },
+            updated: function() {
+                // 모델이 변경되었을 때의 callback 함수
+                console.log("Updated : "+this.message);
+            }
+        });
+    </script>
+</body>
+</html>

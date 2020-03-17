@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Computed and Watch 테스트</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <!--렌더링 영역-->
+    <div id="app">
+        <h1>Computed</h1>
+        <p>제품 가격 <input v-model.number="price"></p>
+        <p>배송비 <input v-model.number="deliveryCost"></p>
+        <!--제품 가격과 배송비를 입력하면 자동으로 최종 가격을 산정, 최종 가격에 렌더링-->
+        <p>최종가격 : {{ totalCost }}</p>
+
+        <h1>Watch</h1>
+        <fieldset>
+            <label for="userid">아이디</label>
+            <input id="userid" v-model="userid"> <!--userid input상자 값이 변경되면 실시간으로 입력값을 검증, useridMessage에 출력-->
+            <span>{{ useridMessage }}</span>
+        </fieldset>
+    </div>
+</body>
+<script>
+    new Vue({
+        el:"#app",
+        data: {
+            price: 0, // 제품 가격
+            deliveryCost: 0, // 배송비
+
+            userid: "", // userid input 상자에 연결할 데이터
+            useridMessage: "" 
+        },
+        computed: {
+            totalCost: function() {
+                return this.price+this.deliveryCost;
+            }
+        },
+        watch: {
+            userid: function(data) {
+                // userid를 감시, v-model지시자에서 이미 .trim옵션을 주었으므로 .trim은 하지않아도 됌
+                if (data.length == 0) {
+                    this.useridMessage = "아이디를 입력해 주세요.";
+                }
+                else if(data.length < 8){
+                    this.useridMessage = "아이디는 8자 이상으로 해주세요.";
+                }
+                else {
+                    this.useridMessage = "유효한 아이디입니다.";
+                }
+            }
+        }
+    })
+</script> 
+</html>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <!-- 도움되는 콘솔 경고를 포함한 개발 버전(Vue.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <!--렌더링 영역-->
+    <div id="app">
+        <!--Global Component-->
+        <global-header></global-header>
+        <h2>{{ content }}</h2>
+        <!--local-component에 부모로부터 message전달 : props-->
+        <!--local-component로부터 발생한 이벤트, v-on:이벤트명으로 콜백연결-->
+        <local-component v-bind:propsdata="message"
+            v-on:send-msg="rcvMsg"></local-component>
+        <local-component2></local-component2>
+    </div>
+
+    <!--EventBus (이벤트 중계기) : 기본적으로는 UI를 갖지 않는다-->
+    <div id="eventBus">
+        <h2>EventBus Receiver</h2>
+        <p>{{ message }}</p>
+    </div>
+
+    <script>
+        // EventBus : Vue의 기본적인 부모-자식간 데이터 교환을 벗어난 컴포넌트간 메세지 교환을 위한 중계 객체
+        var eventBus = new Vue();
+        var eventBusEx = new Vue ({
+            el: "#eventBus",
+            data: {
+                message: "Waiting For Message"
+            },
+            // LifeCycle Hook
+            created: function() {
+                var instance = this;
+                // 초기화 작업 수행
+                eventBus.$on("triggerEventBus", function(message){
+                    console.log("Event From EventBus : ", message);
+                    instance.message = message;
+                });
+            }
+        });
+        // 컴포넌트 이름은 실제 렌더링 될 때는 div로 변경되어서 렌더링됌
+        // 템플릿 속성을 작성할 때 한개의 root 요소만 가지고 있어야한다.
+        // Global Component : 모든 인스턴스에서 활용할 수 있는 공용 컴포넌트 -> ("이름", {객체옵션})
+        Vue.component("global-header", {
+            // 해당 컴포넌트가 관리해야할 데이터, 템플릿, 메서드, 라이프사이클 모두를 자신이 가지고 있다.
+            template:"<div><h1>{{ title }}</h1></div>", 
+            // 자신을 표현하기 위한 템플릿 html
+            data: function() {
+                return {
+                  title: "Global Header"  
+                }
+            }
+        });
+        // 지역 컴포넌트
+        var cmp1 = {
+             // propsdata를 사용하기 위해서는 props 속성을 설정
+             // v-on:event 에 사용된 이벤트 콜백 함수는 해당 컴포넌트 내부의 methods속성에 설정해줘야 한다. 
+            props: ['propsdata'], // v-bind로 전달된 데이터
+            template: `<div>
+                <h2>Local Component</h2>
+                <p>{{ propsdata }}</p>
+                <button v-on:click="sendMsg">Send Message to Parent</button></div>`,
+                methods: { 
+                    // 컴포넌트 내부에서 사용할 함수들(이벤트 콜백 포함)
+                    sendMsg: function() {
+                        // button click 이벤트 콜백
+                        // 실제 렌더링된 영역에서 이벤트 발생시 $emit 메서드를 이용
+                        this.$emit("send-msg", "Message From Child"); // this = 컴포넌트 자신, 첫번째 인자는 이벤트의 이름(사용자 정의), 두번째 이후의 인자값을 전달할 데이터
+
+                        // 부모 자식간의 관계를 벗어난 컴퍼넌트간 데이터 전송은 별도의 Vue각체를 만들어서 해당 Vue 객체를 통해 데이터를 중계 : EventBus
+                        eventBus.$emit("triggerEventBus", "Message from Other Component");
+                    }
+                }
+        }
+        new Vue({
+            el:"#app", // 렌더링 영역의 id
+            data: {
+                content: "Vue Instance",
+                message: "Message From Parent" // 자식에게 전달할 데이터 : props로 전달
+            },
+            // 지역 컴포넌트 사용을 위해서는 등록을 해주어야 함
+            components: {
+                'local-component': cmp1,
+                // local-component라는 이름으로 cmp1 객체를 사용할 수 있다
+                'local-component2' : {
+                    template: "<div><h2>Local Component2</h2></div>"
+                    // 즉석 컴포넌트
+                }
+            }, 
+            methods: {
+                rcvMsg: function(message) {
+                    // message는 child가 이벤트 $emit 했을 때 전달한 인자값들
+                    console.log("Event : ", event);
+                    console.log("child로부터 message 도착");
+                    alert("Message : "+ message); 
+                }
+            }
+        })
+    </script>
+</body>
+</html>

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Vue Cart</title>
+    <!-- 도움되는 콘솔 경고를 포함한 개발 버전(Vue.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <style>
+        li {
+            height: 30px;
+        }
+        li button {
+            float: right;
+            margin-left: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <!--렌더링 영역-->
+    <div id="app">
+        <cart-header></cart-header>
+        <!--살 물건 목록 : Local Component-->
+        <shop-list v-bind:shopping-items="items"></shop-list>
+        <!--구매할 물건 입력 : Local Component-->
+        <cart-input v-on:add-item="registerItem"></cart-input>
+
+        <!--checkbox : 구매한 물건 보이기/숨기기-->
+        <input type="checkbox" v-model="showOption">산 물건 보기
+
+        <!--구매한 물건 목록 : Local Component-->
+        <!--v-show 지시자 : 해당 요소의 display 방식을 변경-->
+        <bought-list v-bind:shopping-items="items" v-show="showOption" v-on:remove-item="removeItem"></bought-list>
+        <!--footer 영역 : Global Component-->
+        <cart-footer></cart-footer>
+    </div>
+</body>
+
+<script>
+    // 전역 컴포넌트 : Vue.component
+    Vue.component("cart-header", {
+        template: `<h1>{{ upperTitle }}</h1>`, 
+            data: function() {
+                return {
+                    title: "Vue Cart"
+                };
+            },
+            computed: {
+                // 실제 모델 데이터를 필요할 때 계산해서 변경하는 고급 속성
+                upperTitle: function() {
+                    return this.title.toUpperCase();
+                }
+            }
+    });
+
+    // Footer
+    Vue.component("cart-footer", {
+        template: "<p>&copy; Bit Academy, 2019</p>"
+    });
+
+    // Local Components 1. shop-list
+    var shopList = {
+        props: ['shopping-items'], // 부모가 v-bind:shopping-items로 전달해준 객체
+        template: `<div><h2>살 물건들</h2>
+                        <ul>
+                            <!--Loop를 돌면서 여러개의 item을 출력-->
+                            <!--item.buy가 false인(구매 안한)것만 출력-->
+                            <!--<li v-for='item in shoppingItems'
+                                v-if="!item.buy">-->
+                            <!--computed된 filteredItems를 사용-->
+                                <li v-for='item in filteredItems'>
+                                    {{ item.name }}
+                                    <button v-on:click="buyItem(item)">구매</button>
+                                </li>
+                        </ul>
+                    </div>`,
+        methods: {
+            buyItem: function(item) {
+                console.log("구매아이템 : ", item);
+                item.buy = true;
+            }
+        },
+        // 모델을 미리 전처리해두고 필요할 때 호출하여 사용
+        computed: {
+            filteredItems: function() {
+                // 부모로부터 전달받은 shoppingItems를 미리 필터링
+                return this.shoppingItems.filter(function(item){
+                    // 필터링 조건을 true/false로 반환
+                    return !item.buy; // item.buy == false 인 것들만 필터링
+                });
+            }
+        }
+    };
+
+    var cartInput = {
+        template: `<div><p>{{ message }}</p>
+                        <input v-model="newItem"><button v-on:click="addItem">추가</button>
+                    </div>`,
+        data: function() {
+            return {
+                newItem: "", // cart-input > input 에 모델로 연결
+                message: "" // newItem을 감시하고 있다가 변경되면 그에 상응하는 메세지를 저장
+            }
+        },
+        methods: {
+            addItem: function() {
+                console.log("추가할 아이템: ", this.newItem);
+                if(this.newItem.trim().length > 0) {
+                    // 아이템 추가 가능, 입력된 내용 newItem으로 새 상품을 생성하고 부모에게 리스트에 등록해 줄 것을 이벤트로 전달
+                    this.$emit("add-item", this.newItem);
+                    this.newItem = "";
+                }
+            }
+        },
+        watch: {
+            newItem: function(item) {
+                // 변경사항을 감시할 데이터 모델
+                console.log("WATCH : ", item);
+                // newItem (input 입력 내용)에 따라 length 체크해서 == 0 이면 상품을 입력하세요. > 0 이면 상품을 등록할 수 있습니다.
+                if (item.trim().length > 0) {
+                    this.message = "상품을 등록하실 수 있습니다.";
+                } else {
+                    this.message = "상품을 입력하세요.";
+                }
+            }
+        }
+    };
+
+    //구매한 상품목록
+    var boughtList = {
+        props: ['shopping-items'],
+        template: `<div><h2>산 물건들</h2>
+                        <ul>
+                            <li v-for="item in filteredItems">{{ item.name }}
+                                <button v-on:click="removeItem(item)">삭제</button>
+                                <button v-on:click="cancelItem(item)">구매취소</button>
+                            </li>
+                        </ul>
+                    </div>`,
+        methods: {
+            removeItem: function(item) {
+                console.log("삭제할 항목 : ", item);
+                this.$emit("remove-item", item);
+            },
+            cancelItem: function(item) {
+                console.log("구매 취소할 항목 : ", item);
+                item.buy = false;
+            }
+        },
+        computed: {
+            filteredItems: function() {
+                return this.shoppingItems.filter(function(item){
+                    return item.buy; // item.buy == tru 인거만 필터링
+                }); 
+            }
+        }
+    };
+
+    // Vue Instance
+    var app = new Vue({
+        el: "#app", // 렌더링 영역 연결
+        data: {
+            // 쇼핑 아이템을 담을 객체의 배열
+            items: [
+                {name:"무", buy:false},
+                {name:"배추", buy:false},
+                {name:"쪽파", buy:true},
+                {name:"고춧가루", buy:false}
+            ],
+            showOption: false // checkbox에 있는 모델로 연결
+            // bought-list 컴포넌트의 display 속성을 제어
+        },
+        // Local Component는 사용 등록을 해줘야함
+        components: {
+            "shop-list": shopList,
+            "cart-input": cartInput,
+            "bought-list": boughtList
+        },
+        methods: {
+            registerItem: function(itemName) {
+                // 객체 생성, 목록(items)에 추가
+                console.log("cart-input으로부터 넘어온 아이템 이름 : ", itemName);
+                // 새 객체 생성
+                var item = {
+                    name: itemName,
+                    buy: false
+                }
+                // items에 추가 : push
+                this.items.push(item);
+            },
+            removeItem: function(item) {
+                console.log("삭제할 요소 : ", item);
+                console.log("삭제할 요소의 인덱스 : ", this.items.indexOf(item));
+                var deletedIndex = this.items.indexOf(item); // 오류로 인해서 인덱스가 없는 경우
+                if (deletedIndex > -1) {
+                    // 삭제할 수 있다
+                    this.items.splice(deletedIndex, 1);
+                }
+            }
+        }
+    });
+</script>
+</html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Axios Example</title>
+    <!--Vue.js-->
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+    <!--Axios-->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <link href="https://fonts.googleapis.com/css?family=Nanum+Pen+Script|Zhi+Mang+Xing&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Nanum Pen Script', 'Zhi Mang Xing', cursive;
+            margin: 0; 
+            padding: 0; 
+        } 
+        img {
+            width: 100px;
+            height: 100px;;
+        }
+        table {
+            width: 500px;
+            height: 10px;
+        }
+        
+    </style>
+</head>
+<body>
+    <h1>Pixae Movies</h1>
+    <div id="app">
+        <!--렌더링 영역-->
+        <!--loop : 개별 movies 출력-->
+        <div v-for="movie in movies">
+            <table border="1">
+            <tr>
+                <td rowspan="3"><img v-bind:src="'http://localhost:3000/images/' + movie.image"></td>
+                <td><h2>TITLE : {{ movie.title }}</h2></td>
+            </tr>
+            <tr>
+                <td><p>DIRECTOR :{{ movie.director }}</p></td>
+            </tr>
+            <tr>
+                <td><p>YEAR : {{ movie.year }}</p></td>
+            </tr>
+            </table>
+        </div>
+    </div>
+</body>
+<script>
+    new Vue ({
+        el: "#app",
+        data: {
+            movies: [] // movie를 담을 객체를 저장할 array
+        },
+        created: function() {
+            console.log("서버로부터 영화 데이터 로드");
+            // HTTP 비동기 호출 (Async Call)
+            var instance = this;
+            axios({
+                url: "http://localhost:3000/movies",
+                method: "GET"
+            }).then(function(response) {
+                // 요청이 성공했을 때의 처리
+                console.log(response);
+                instance.movies = response.data.movies;
+                console.log(this.movies);
+            }).catch(function(error) {
+                console.log("Error : ", error);
+            })
+        }
+    });
+</script>
+</html>

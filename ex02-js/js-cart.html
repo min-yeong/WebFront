@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+        <title>JS Cart</title>
+        <style>
+            #list li {
+                height: 30px;
+            }
+        </style>
+        <script>
+            function addItem() {
+                //item 입력 박스에 상품을 입력하고 btn-add를 누르면 새 li 요소 생성, 그리고 ul#list에 추가
+                var itemInput = document.getElementById("item");
+                var item = itemInput.value.trim(); // 공백제거
+
+                if(item.length > 0) {
+                    // 상품 추가, 1. 새노드 생성
+                    var newItem = document.createElement("li"); // 고아상태
+                    newItem.innerText = item;
+
+                    // 도구 상자 생성
+                    var toolbar = document.createElement("div");
+                    // 도구 상자 내에 삭제 버튼 생성
+                    var delBtn = document.createElement("button");
+                    delBtn.innerText = "삭제";
+                    toolbar.appendChild(delBtn);
+                    newItem.appendChild(toolbar);
+
+                    //Script로 button 스타일 변경 -> style 속성 사용
+                    toolbar.style.display = "inline";
+                    delBtn.style.cssFloat = "right";
+
+                    // delBtn에 click 이벤트 부착 (button -> div -> li 에서 li를 삭제해야하기 때문에 부모의 부모를 삭제)
+                    delBtn.addEventListener("click", function(event) {
+                        console.log("이벤트를 발생시킨 객체 : ", event.target);
+                        console.log("실제 삭제해야할 객체 : ", event.target.parentNode.parentNode);
+                        var removeItem = event.target.parentNode.parentNode;
+                        var parent = removeItem.parentNode;
+                        parent.removeChild(removeItem);
+                    });
+
+                    // 2. 부모 찾기
+                    var parent = document.getElementById("list");
+                    // 3. 새 노드를 부모에 추가
+                    parent.appendChild(newItem);
+                    // 4. 원래 입력 상자 내용 비우기
+                    itemInput.value = "";
+                }
+                else {
+                    alert("상품을 입력하세요.");
+                    itemInput.focus();
+                    }
+                }
+
+            // 초기화 코드 : 페이지가 모두 로드된 이후에 초기화 실행
+            window.addEventListener("load", function(event) {
+                // 버튼에 이벤트 리스너 부착
+                var addBtn = document.getElementById("btn-add");
+                addBtn.addEventListener("click", addItem);
+
+                // 프로그램 시작시 상품 목록 모두 제거
+                var items = document.querySelectorAll("#list > li");
+                for (var i=0; i<items.length; i++) {
+                    items[i].parentNode.removeChild(items[i]);
+                }
+            });
+        </script>
+    </head>
+    <body>
+        <div id="header">
+            <h1>Shopping List</h1>
+        </div>
+        <div id="cart-list">
+            <ul id="list">
+                <li>무</li>
+                <li>배추</li>
+                <li>쪽파</li>
+                <li>고춧가루</li>
+            </ul>
+        </div>
+        <div id="cart-input">
+            <input id="item"><button id="btn-add">추가</button>
+        </div>
+        <div id="footer">
+            &copy;Bit Academy
+        </div>
+    </body>
+</html>
